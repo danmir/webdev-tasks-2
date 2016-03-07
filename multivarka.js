@@ -3,6 +3,16 @@ var async = require('async');
 
 var tasks = [];
 
+function compareRequest(where, operator, compareWith) {
+    var operators = {
+        '!=': {$ne: compareWith},
+        '==': compareWith,
+        '>': {$gt: compareWith},
+        '<': {$lt: compareWith}
+    };
+    return {[where]: operators[operator]}
+}
+
 var multivarka = {
     /**
      * Подключение к mongodb
@@ -69,14 +79,11 @@ var multivarka = {
      */
     equal: function (equalVal) {
         tasks.push(function (params, cb) {
-            var findStmt = {};
             if (params.isNot) {
-                findStmt[params.where] = {$ne: equalVal};
-                params.findStmt = findStmt;
+                params.findArgs = compareRequest(params.where, '!=', equalVal);
                 return cb(null, params);
             }
-            findStmt[where] = equalVal;
-            params.findStmt = findStmt;
+            params.findArgs = compareRequest(params.where, '==', equalVal);
             cb(null, params);
         });
         return this;
@@ -89,14 +96,11 @@ var multivarka = {
      */
     lessThan: function (lessThanVal) {
         tasks.push(function (params, cb) {
-            var findStmt = {};
             if (params.isNot) {
-                findStmt[where] = {$gt: lessThanVal};
-                params.findStmt = findStmt;
+                params.findArgs = compareRequest(params.where, '>', lessThanVal);
                 return cb(null, params);
             }
-            findStmt[where] = {$lt: lessThanVal};
-            params.findStmt = findStmt;
+            params.findArgs = compareRequest(params.where, '<', lessThanVal);
             cb(null, params);
         });
         return this;
@@ -109,14 +113,11 @@ var multivarka = {
      */
     greatThan: function (greatThanVal) {
         tasks.push(function (params, cb) {
-            var findStmt = {};
             if (params.isNot) {
-                findStmt[where] = {$lt: greatThanVal};
-                params.findStmt = findStmt;
-                return cb(null, collection, db, findStmt);
+                params.findArgs = compareRequest(params.where, '<', greatThanVal);
+                return cb(null, params);
             }
-            findStmt[where] = {$gt: greatThanVal};
-            params.findStmt = findStmt;
+            params.findArgs = compareRequest(params.where, '>', greatThanVal);
             cb(null, params);
         });
         return this;
@@ -129,19 +130,17 @@ var multivarka = {
     include: function (includeArr) {
         tasks.push(function (params, cb) {
             var stmt = [];
-            var findStmt = {};
             if (params.isNot) {
                 for (var idx in includeArr) {
                     stmt.push({$ne: includeArr[idx]});
                 }
-                findStmt[params.where] = stmt;
-                params.findStmt = findStmt;
+                params.findArgs = {
+                    [params.where]: stmt
+                };
                 return cb(null, params);
             }
             for (var idx in includeArr) {
-                findStmt[params.where] = includeArr[idx];
-                params.findStmt = findStmt;
-                stmt.push(findStmt);
+                stmt.push({[params.where]: includeArr[idx]});
             }
             params.findArgs = {$or: stmt};
             cb(null, params);
