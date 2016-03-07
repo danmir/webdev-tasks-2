@@ -14,7 +14,8 @@ var multivarka = {
         tasks.push(function (cb) {
             MongoClient.connect(connStr, function(err, db){
                 // console.log(db);
-                cb(err, db);
+                var params = {db};
+                cb(err, params);
             });
         });
         return this;
@@ -26,9 +27,10 @@ var multivarka = {
      * @returns {multivarka}
      */
     collection: function (collectionName) {
-        tasks.push(function (db, cb) {
-            var collection = db.collection(collectionName);
-            cb(null, collection, db);
+        tasks.push(function (params, cb) {
+            var collection = params.db.collection(collectionName);
+            var params = {db: params.db, collection};
+            cb(null, params);
         });
         return this;
     },
@@ -39,9 +41,11 @@ var multivarka = {
      * @returns {multivarka}
      */
     where: function (where) {
-        tasks.push(function (collection, db, cb) {
+        tasks.push(function (params, cb) {
             var isNot = false;
-            cb(null, collection, db, where, isNot);
+            params.isNot = isNot;
+            params.where = where;
+            cb(null, params);
         });
         return this;
     },
@@ -50,9 +54,10 @@ var multivarka = {
      * @returns {multivarka}
      */
     not: function () {
-        tasks.push(function (collection, db, where, cb) {
+        tasks.push(function (params, cb) {
             var isNot = true;
-            cb(null, collection, db, where, isNot);
+            params.isNot = isNot;
+            cb(null, params);
         });
         return this;
     },
@@ -63,14 +68,16 @@ var multivarka = {
      * @returns {multivarka}
      */
     equal: function (equalVal) {
-        tasks.push(function (collection, db, where, isNot, cb) {
+        tasks.push(function (params, cb) {
             var findStmt = {};
-            if (isNot) {
-                findStmt[where] = {$ne: equalVal};
-                return cb(null, collection, db, findStmt);
+            if (params.isNot) {
+                findStmt[params.where] = {$ne: equalVal};
+                params.findStmt = findStmt;
+                return cb(null, params);
             }
             findStmt[where] = equalVal;
-            cb(null, collection, db, findStmt);
+            params.findStmt = findStmt;
+            cb(null, params);
         });
         return this;
     },
@@ -81,14 +88,16 @@ var multivarka = {
      * @returns {multivarka}
      */
     lessThan: function (lessThanVal) {
-        tasks.push(function (collection, db, where, isNot, cb) {
+        tasks.push(function (params, cb) {
             var findStmt = {};
-            if (isNot) {
+            if (params.isNot) {
                 findStmt[where] = {$gt: lessThanVal};
-                return cb(null, collection, db, findStmt);
+                params.findStmt = findStmt;
+                return cb(null, params);
             }
             findStmt[where] = {$lt: lessThanVal};
-            cb(null, collection, db, findStmt);
+            params.findStmt = findStmt;
+            cb(null, params);
         });
         return this;
     },
@@ -99,14 +108,16 @@ var multivarka = {
      * @returns {multivarka}
      */
     greatThan: function (greatThanVal) {
-        tasks.push(function (collection, db, where, isNot, cb) {
+        tasks.push(function (params, cb) {
             var findStmt = {};
-            if (isNot) {
+            if (params.isNot) {
                 findStmt[where] = {$lt: greatThanVal};
+                params.findStmt = findStmt;
                 return cb(null, collection, db, findStmt);
             }
             findStmt[where] = {$gt: greatThanVal};
-            cb(null, collection, db, findStmt);
+            params.findStmt = findStmt;
+            cb(null, params);
         });
         return this;
     },
@@ -116,21 +127,24 @@ var multivarka = {
      * @returns {multivarka}
      */
     include: function (includeArr) {
-        tasks.push(function (collection, db, where, isNot, cb) {
+        tasks.push(function (params, cb) {
             var stmt = [];
             var findStmt = {};
-            if (isNot) {
+            if (params.isNot) {
                 for (var idx in includeArr) {
                     stmt.push({$ne: includeArr[idx]});
                 }
-                findStmt[where] = stmt;
-                return cb(null, collection, db, findStmt);
+                findStmt[params.where] = stmt;
+                params.findStmt = findStmt;
+                return cb(null, params);
             }
             for (var idx in includeArr) {
-                findStmt[where] = includeArr[idx];
+                findStmt[params.where] = includeArr[idx];
+                params.findStmt = findStmt;
                 stmt.push(findStmt);
             }
-            cb(null, collection, db, {$or: stmt});
+            params.findArgs = {$or: stmt};
+            cb(null, params);
         });
         return this;
     },
@@ -140,11 +154,11 @@ var multivarka = {
      * @param userCallback
      */
     find: function (userCallback) {
-        tasks.push(function (collection, db, findArgs, cb) {
-            console.log(findArgs);
-            collection.find(findArgs).toArray(function (err, docs) {
+        tasks.push(function (params, cb) {
+            console.log(params.findArgs);
+            params.collection.find(params.findArgs).toArray(function (err, docs) {
                 userCallback(err, docs);
-                db.close();
+                params.db.close();
             });
         });
         async.waterfall(tasks, function (err, result) {
@@ -157,11 +171,11 @@ var multivarka = {
      * @param userCallback
      */
     remove: function (userCallback) {
-        tasks.push(function (collection, db, findArgs, cb) {
-            console.log(findArgs);
-            collection.remove(findArgs, null, function (err, result) {
+        tasks.push(function (params, cb) {
+            console.log(params.findArgs);
+            params.collection.remove(params.findArgs, null, function (err, result) {
                 userCallback(err, result);
-                db.close();
+                params.db.close();
             });
         });
         async.waterfall(tasks, function (err, result) {
@@ -176,10 +190,11 @@ var multivarka = {
      * @returns {multivarka}
      */
     set: function (field, value) {
-        tasks.push(function (collection, db, findArgs, cb) {
-            var setArgs = {};
-            setArgs[field] = value;
-            cb(null, collection, db, findArgs, {$set: setArgs}, {multi: true});
+        tasks.push(function (params, cb) {
+            var setArgs = {[field]: value};
+            params.setArgs = {$set: setArgs};
+            params.optionArgs = {multi: true};
+            cb(null, params);
         });
         return this;
     },
@@ -189,11 +204,12 @@ var multivarka = {
      * @param userCallback
      */
     update: function (userCallback) {
-        tasks.push(function (collection, db, findArgs, setArgs, optionArgs, cb) {
-            console.log(findArgs, setArgs, optionArgs);
-            collection.update(findArgs, setArgs, optionArgs, function (err, result) {
-                userCallback(err, result);
-                db.close();
+        tasks.push(function (params, cb) {
+            console.log(params.findArgs, params.setArgs, params.optionArgs);
+            params.collection.update(params.findArgs, params.setArgs, params.optionArgs,
+                function (err, result) {
+                    userCallback(err, result);
+                    params.db.close();
             });
         });
         async.waterfall(tasks, function (err, result) {
@@ -207,10 +223,10 @@ var multivarka = {
      * @param userCallback
      */
     insert: function (doc, userCallback) {
-        tasks.push(function (collection, db, cb) {
-            collection.insert(doc, null, function (err, result) {
+        tasks.push(function (params, cb) {
+            params.collection.insert(doc, null, function (err, result) {
                 userCallback(err, result);
-                db.close();
+                params.db.close();
             })
         });
         async.waterfall(tasks, function (err, result) {
