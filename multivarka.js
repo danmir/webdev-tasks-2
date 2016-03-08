@@ -162,6 +162,7 @@ var multivarka = {
         async.waterfall(tasks, function (err, result) {
             console.log(err, result);
         });
+        return this;
     },
     /**
      * Терминальное состояние
@@ -178,6 +179,7 @@ var multivarka = {
         async.waterfall(tasks, function (err, result) {
             console.log(err, result);
         });
+        return this;
     },
     /**
      * Установка критериев для последующего обновления
@@ -211,6 +213,7 @@ var multivarka = {
         async.waterfall(tasks, function (err, result) {
             console.log(err, result);
         });
+        return this;
     },
     /**
      * Терминальное состояние
@@ -228,6 +231,7 @@ var multivarka = {
         async.waterfall(tasks, function (err, result) {
             console.log(err, result);
         });
+        return this;
     }
 };
 
