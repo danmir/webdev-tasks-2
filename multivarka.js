@@ -154,7 +154,6 @@ var multivarka = {
      */
     find: function (userCallback) {
         tasks.push(function (params, cb) {
-            console.log(params.findArgs);
             params.collection.find(params.findArgs).toArray(function (err, docs) {
                 userCallback(err, docs);
                 params.db.close();
@@ -171,7 +170,6 @@ var multivarka = {
      */
     remove: function (userCallback) {
         tasks.push(function (params, cb) {
-            console.log(params.findArgs);
             params.collection.remove(params.findArgs, null, function (err, result) {
                 userCallback(err, result);
                 params.db.close();
@@ -204,7 +202,6 @@ var multivarka = {
      */
     update: function (userCallback) {
         tasks.push(function (params, cb) {
-            console.log(params.findArgs, params.setArgs, params.optionArgs);
             params.collection.update(params.findArgs, params.setArgs, params.optionArgs,
                 function (err, result) {
                     userCallback(err, result);
