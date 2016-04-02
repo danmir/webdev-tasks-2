@@ -64,7 +64,7 @@ var multivarka = {
     collection: function (collectionName) {
         tasks.push(function (params, cb) {
             if (!validParams(params, 'collection')) {
-                return cb('Не достаточно параметров')
+                return cb('Недостаточно параметров')
             }
             var collection = params.db.collection(collectionName);
             var params = {db: params.db, collection};
@@ -81,7 +81,7 @@ var multivarka = {
     where: function (where) {
         tasks.push(function (params, cb) {
             if (!validParams(params, 'where')) {
-                return cb('Не достаточно параметров')
+                return cb('Недостаточно параметров')
             }
             params.isNot = false;
             params.where = where;
@@ -96,7 +96,7 @@ var multivarka = {
     not: function () {
         tasks.push(function (params, cb) {
             if (!validParams(params, 'not')) {
-                return cb('Не достаточно параметров')
+                return cb('Недостаточно параметров')
             }
             params.isNot = true;
             cb(null, params);
@@ -112,7 +112,7 @@ var multivarka = {
     equal: function (equalVal) {
         tasks.push(function (params, cb) {
             if (!validParams(params, 'equal')) {
-                return cb('Не достаточно параметров')
+                return cb('Недостаточно параметров')
             }
             if (params.isNot) {
                 params.findArgs = compareRequest(params.where, '!=', equalVal);
@@ -132,7 +132,7 @@ var multivarka = {
     lessThan: function (lessThanVal) {
         tasks.push(function (params, cb) {
             if (!validParams(params, 'lessThan')) {
-                return cb('Не достаточно параметров')
+                return cb('Недостаточно параметров')
             }
             if (params.isNot) {
                 params.findArgs = compareRequest(params.where, '>', lessThanVal);
@@ -152,7 +152,7 @@ var multivarka = {
     greatThan: function (greatThanVal) {
         tasks.push(function (params, cb) {
             if (!validParams(params, 'greatThan')) {
-                return cb('Не достаточно параметров')
+                return cb('Недостаточно параметров')
             }
             if (params.isNot) {
                 params.findArgs = compareRequest(params.where, '<', greatThanVal);
@@ -171,7 +171,7 @@ var multivarka = {
     include: function (includeArr) {
         tasks.push(function (params, cb) {
             if (!validParams(params, 'include')) {
-                return cb('Не достаточно параметров')
+                return cb('Недостаточно параметров')
             }
             var stmt = [];
             if (params.isNot) {
@@ -199,7 +199,7 @@ var multivarka = {
     find: function (userCallback) {
         tasks.push(function (params, cb) {
             if (!validParams(params, 'find')) {
-                return cb('Не достаточно параметров')
+                return cb('Недостаточно параметров')
             }
             params.collection.find(params.findArgs).toArray(function (err, docs) {
                 userCallback(err, docs);
@@ -219,7 +219,7 @@ var multivarka = {
     remove: function (userCallback) {
         tasks.push(function (params, cb) {
             if (!validParams(params, 'remove')) {
-                return cb('Не достаточно параметров')
+                return cb('Недостаточно параметров')
             }
             params.collection.remove(params.findArgs, null, function (err, result) {
                 userCallback(err, result);
@@ -241,7 +241,7 @@ var multivarka = {
     set: function (field, value) {
         tasks.push(function (params, cb) {
             if (!validParams(params, 'set')) {
-                return cb('Не достаточно параметров')
+                return cb('Недостаточно параметров')
             }
             var setArgs = {[field]: value};
             params.setArgs = {$set: setArgs};
@@ -258,7 +258,7 @@ var multivarka = {
     update: function (userCallback) {
         tasks.push(function (params, cb) {
             if (!validParams(params, 'update')) {
-                return cb('Не достаточно параметров')
+                return cb('Недостаточно параметров')
             }
             params.collection.update(params.findArgs, params.setArgs, params.optionArgs,
                 function (err, result) {
@@ -280,7 +280,7 @@ var multivarka = {
     insert: function (doc, userCallback) {
         tasks.push(function (params, cb) {
             if (!validParams(params, 'insert')) {
-                return cb('Не достаточно параметров')
+                return cb('Недостаточно параметров')
             }
             params.collection.insert(doc, null, function (err, result) {
                 userCallback(err, result);
@@ -291,6 +291,9 @@ var multivarka = {
             console.log(err, result);
         });
         return this;
+    },
+    reset: function () {
+        tasks = [];
     }
 };
 
